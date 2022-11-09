@@ -3,14 +3,15 @@ import boto3
 
 
 class hcp_s3():
-    def __init__(self):
-        self.client = boto3.client('s3')
+    client = boto3.client('s3')
 
-    def list_buckets(self):
+    @classmethod
+    def list_buckets(cls):
         """ List all buckets. """
-        return [bucket["Name"] for bucket in self.client.list_buckets()["Buckets"]]
+        return [bucket["Name"] for bucket in cls.client.list_buckets()["Buckets"]]
 
-    def head(self, key, bucket='hcp-openaccess'):
+    @classmethod
+    def head(cls, key, bucket='hcp-openaccess'):
         """ Check if object exists.
 
         Parameters
@@ -25,9 +26,10 @@ class hcp_s3():
         bool
             True if object with key exists, otherwise False.
         """
-        return True if self.client.head_object(Bucket=bucket, Key=key) else False
+        return True if cls.client.head_object(Bucket=bucket, Key=key) else False
 
-    def ls(self, prefix='', bucket='hcp-openaccess', maxkeys=1300, delimiter=False, endslash=True):
+    @classmethod
+    def ls(cls, prefix='', bucket='hcp-openaccess', maxkeys=1300, delimiter=False, endslash=True):
         """ Lists objects under prefix.
 
         Parameters
@@ -52,9 +54,9 @@ class hcp_s3():
         prefix_ = prefix + '/' if prefix and not prefix.endswith('/') and delimiter and endslash else prefix
 
         if delimiter:
-            res = self.client.list_objects(Bucket=bucket, Delimiter='/', Prefix=prefix_, MaxKeys=maxkeys)
+            res = cls.client.list_objects(Bucket=bucket, Delimiter='/', Prefix=prefix_, MaxKeys=maxkeys)
         else:
-            res = self.client.list_objects(Bucket=bucket, Prefix=prefix_, MaxKeys=maxkeys)
+            res = cls.client.list_objects(Bucket=bucket, Prefix=prefix_, MaxKeys=maxkeys)
 
         try:
             if delimiter:
@@ -65,7 +67,8 @@ class hcp_s3():
             print(f"Invalid prefix '{prefix_}' (if it is not, set `delimiter` to False)")
             return False
 
-    def get(self, key, bucket='hcp-openaccess'):
+    @classmethod
+    def get(cls, key, bucket='hcp-openaccess'):
         """ Gets object from the bucket.
 
         Parameters
@@ -80,11 +83,12 @@ class hcp_s3():
         dict
             Object if it exists else None.
         """
-        if not self.ls(key, bucket, delimiter=False): return
+        if not cls.ls(key, bucket, delimiter=False): return
         
-        return self.client.get_object(Bucket=bucket, Key=key)
+        return cls.client.get_object(Bucket=bucket, Key=key)
 
-    def download(self, prefix, local='data', bucket='hcp-openaccess'):
+    @classmethod
+    def download(cls, prefix, local='data', bucket='hcp-openaccess'):
         """ Downloads objects under prefix recursively.
 
         Parameters
@@ -107,7 +111,7 @@ class hcp_s3():
             kwargs = base_kwargs.copy()
             if next_token != '':
                 kwargs.update({'ContinuationToken': next_token})
-            results = self.client.list_objects_v2(**kwargs)
+            results = cls.client.list_objects_v2(**kwargs)
             contents = results.get('Contents')
             for i in contents:
                 k = i.get('Key')
@@ -125,7 +129,7 @@ class hcp_s3():
             dest_pathname = os.path.join(local, bucket, k)
             if not os.path.exists(os.path.dirname(dest_pathname)):
                 os.makedirs(os.path.dirname(dest_pathname))
-            self.client.download_file(bucket, k, dest_pathname)
+            cls.client.download_file(bucket, k, dest_pathname)
 
 if __name__ == '__main__':
     pass
