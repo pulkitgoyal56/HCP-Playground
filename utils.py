@@ -31,7 +31,7 @@ class HCP_S3():
         return True if cls.client.head_object(Bucket=bucket, Key=key) else False
 
     @classmethod
-    def ls(cls, prefix='', bucket='hcp-openaccess', maxkeys=1300, delimiter=False, endslash=True):
+    def ls(cls, prefix='', bucket='hcp-openaccess', maxkeys=1000, delimiter=False, endslash=True):
         """ Lists objects under prefix.
 
         Parameters
@@ -40,7 +40,7 @@ class HCP_S3():
         bucket : str, optional
             Bucket to use, by default 'hcp-openaccess'.
         maxkeys : int, optional
-            Maximum keys to return, by default 1300.
+            Maximum keys to return (<= 1000), by default 1000.
         delimiter : bool, optional
             Whether to limit search depth, by default False.
         endslash : bool, optional
