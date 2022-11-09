@@ -1,8 +1,10 @@
 import os
+import pathlib
+
 import boto3
 
 
-class hcp_s3():
+class HCP_S3():
     client = boto3.client('s3')
 
     @classmethod
@@ -88,7 +90,7 @@ class hcp_s3():
         return cls.client.get_object(Bucket=bucket, Key=key)
 
     @classmethod
-    def download(cls, prefix, local='data', bucket='hcp-openaccess'):
+    def download(cls, prefix, local='data', trim=0, bucket='hcp-openaccess'):
         """ Downloads objects under prefix recursively.
 
         Parameters
@@ -97,6 +99,8 @@ class hcp_s3():
             Directory to download (path prefix).
         local : str, optional
             Top level folder for downloads, by default 'data'.
+        trim : int, optional
+            Starting index to slice from root of S3 path (including bucket) to get local path relative to `local`, by default 0.
         bucket : str, optional
             Bucket to use, by default 'hcp-openaccess'.
         """
@@ -126,7 +130,7 @@ class hcp_s3():
             if not os.path.exists(os.path.dirname(dest_pathname)):
                 os.makedirs(os.path.dirname(dest_pathname))
         for k in keys:
-            dest_pathname = os.path.join(local, bucket, k)
+            dest_pathname = str(pathlib.Path(local, *pathlib.Path(bucket, k).parts[trim:]))
             if not os.path.exists(os.path.dirname(dest_pathname)):
                 os.makedirs(os.path.dirname(dest_pathname))
             cls.client.download_file(bucket, k, dest_pathname)
